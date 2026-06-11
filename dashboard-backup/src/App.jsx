@@ -17,7 +17,6 @@ import {
   LabelList,
 } from 'recharts'
 import './App.css'
-import { ExecSection } from './ExecSection.jsx'
 
 function formatCompact(n) {
   if (n == null) return '—'
@@ -485,17 +484,15 @@ function downloadCustomersPdf(rows) {
       r.siftFiles != null ? `${r.siftFiles.toLocaleString()} sift` : '— sift',
       r.copiedFiles != null ? `${r.copiedFiles.toLocaleString()} copied` : '— copied',
       r.attributedFiles != null ? `${r.attributedFiles.toLocaleString()} attr` : '— attr',
-      r.releFiles != null ? `${r.releFiles.toLocaleString()} RELE` : '— RELE',
       r.extractedFiles != null ? `${r.extractedFiles.toLocaleString()} extracted` : '— extracted',
     ].join('\n'),
-    r.extractionPct || '—',
     outreachChip(r.outreachStatus)?.label ?? '—',
     r.crmLiaison || '—',
   ])
 
   autoTable(pdf, {
     startY: 72,
-    head: [['Customer', 'Initial PwC Interaction Date', 'Days Active', 'Sentiment', 'Analytics Step', 'Files', '% Extraction Complete', 'Meeting', 'CRM Liaison']],
+    head: [['Customer', 'Initial PwC Interaction Date', 'Days Active', 'Sentiment', 'Analytics Step', 'Files', 'Meeting', 'CRM Liaison']],
     body,
     theme: 'grid',
     margin: { left: 24, right: 24 },
@@ -524,9 +521,8 @@ function downloadCustomersPdf(rows) {
       3: { cellWidth: 54 },
       4: { cellWidth: 74 },
       5: { cellWidth: 100 },
-      6: { cellWidth: 56 },
-      7: { cellWidth: 62 },
-      8: { cellWidth: 'auto' },
+      6: { cellWidth: 62 },
+      7: { cellWidth: 'auto' },
     },
     didParseCell: (data) => {
       if (data.section !== 'body') return
@@ -963,7 +959,7 @@ function DetailedCustomerView() {
   }
   const headers = [
     'Customer', 'Initial PwC Interaction Date', 'Days Active', 'Sentiment',
-    'Analytics Current step', 'Files', '% Extraction Complete', 'Meeting Status', 'CRM Liaison',
+    'Analytics Current step', 'Files', 'Meeting Status', 'CRM Liaison',
   ]
   const handlePdfDownload = async () => {
     if (downloading) return
@@ -1150,14 +1146,9 @@ function DetailedCustomerView() {
                         <span className="dcv-files-label">copied</span>
                         <span className="dcv-files-num dim">{r.attributedFiles != null ? r.attributedFiles.toLocaleString() : '—'}</span>
                         <span className="dcv-files-label">attr</span>
-                        <span className="dcv-files-num dim">{r.releFiles != null ? r.releFiles.toLocaleString() : '—'}</span>
-                        <span className="dcv-files-label">RELE</span>
                         <span className="dcv-files-num dim">{r.extractedFiles != null ? r.extractedFiles.toLocaleString() : '—'}</span>
                         <span className="dcv-files-label">extracted</span>
                       </div>
-                    </td>
-                    <td className="dcv-muted" style={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
-                      {r.extractionPct || <span className="dcv-dash">—</span>}
                     </td>
                     <td style={{ whiteSpace: 'nowrap' }}>
                       {meet ? (
@@ -2576,7 +2567,18 @@ function MainApp() {
         lastRefreshed={lastRefreshed}
       />
       <main className="main">
-        <ExecSection />
+        <FilePreservation refreshKey={refreshKey} />
+        <div className="grid-4">
+          <FileProfiling refreshKey={refreshKey} />
+          <FileHarvesting refreshKey={refreshKey} />
+          <DataComplexion refreshKey={refreshKey} />
+        </div>
+        <CustomerSentiment triage={triage} />
+        <div className="grid-bottom">
+          <CustomerTriageProcess triage={triage} />
+          <CustomerOutreach triage={triage} />
+        </div>
+        <CustomerInteractionWorkflow triage={triage} />
       </main>
     </div>
     </RefreshContext.Provider>
@@ -2584,7 +2586,7 @@ function MainApp() {
 }
 
 // Consolidated full page with every customer-related section, opened from the
-// "All customer pages" tile.
+// "All customer pages" tile on the Customer Triage Process.
 function CustomerAllPage() {
   const triage = useTriage(0)
   return (
@@ -2599,6 +2601,7 @@ function CustomerAllPage() {
         <CustomerOutreach triage={triage} />
       </div>
       <CustomerInteractionWorkflow triage={triage} />
+      <DetailedCustomerView />
     </div>
   )
 }
@@ -2624,7 +2627,7 @@ export default function App() {
   if (view === 'complexion') {
     return (
       <RefreshContext.Provider value={0}>
-        <div className="app dark dc-standalone">
+        <div className="app dark" style={{ minHeight: '100vh', padding: 16, boxSizing: 'border-box' }}>
           <DataComplexion refreshKey={0} />
         </div>
       </RefreshContext.Provider>
